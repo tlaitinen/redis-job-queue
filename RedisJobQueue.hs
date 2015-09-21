@@ -53,10 +53,10 @@ pop (JobQueue qn conn) = runRedis conn $ do
             return $ Right Nothing
         Left e -> return $ Left e
         
-pushJson :: JobQueue -> Priority -> A.Value -> IO (Either Reply Integer)
-pushJson jq p j = push jq p (LBS.toStrict $ A.encode j)
+pushJson :: A.ToJSON a => JobQueue -> Priority -> a -> IO (Either Reply Integer)
+pushJson jq p j = push jq p $ LBS.toStrict $ A.encode j
 
-popJson :: JobQueue -> IO (Either String (Maybe A.Value))
+popJson :: A.FromJSON a => JobQueue -> IO (Either String (Maybe a))
 popJson jq = do
     mj <- pop jq
     case mj of
