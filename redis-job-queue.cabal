@@ -1,6 +1,6 @@
 name:           redis-job-queue
 version:        0.1.0
-license:        BSD3
+license:        MIT
 license-file:   LICENSE
 author:         Tero Laitinen 
 maintainer:     Tero Laitinen
