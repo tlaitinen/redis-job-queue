@@ -3,7 +3,15 @@ Simple Redis-backed job priority queue in Haskell modeled after [http://product.
 
 # Example
 ```haskell
-data Task = A Int | B Text | C Double
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+import RedisJobQueue
+import Control.Concurrent
+import Data.Aeson
+import Data.Aeson.TH
+import Data.Text (Text)
+
+data Task = A Int | B Text | C Value deriving (Show)
 $(deriveJSON defaultOptions ''Task)
 
 main :: IO ()
@@ -11,7 +19,7 @@ main = do
     forkIO $ withJobQueue "q" $ \jq -> do
         _ <- pushJson jq 2 $ A 2
         _ <- pushJson jq 3 $ B "three"
-        _ <- pushJson jq 1 $ C 1.0
+        _ <- pushJson jq 1 $ C $ object [ "id" .= (1::Int), "value" .= True ]
         return ()
     threadDelay 500000
     withJobQueue "q" f
@@ -20,16 +28,15 @@ main = do
             r <- popJson jq
             case r of
                 Right (Just j) -> do
-                    print (j :: Value)
+                    print (j :: Task)
                     f jq
                 Right Nothing -> return ()
                 Left r -> print r
-
 ```
 
 Outputs: 
 ```
-Object (fromList [("tag",String "C"),("contents",Number 1.0)])
-Object (fromList [("tag",String "A"),("contents",Number 2.0)])
-Object (fromList [("tag",String "B"),("contents",String "three")])
+C (Object (fromList [("value",Bool True),("id",Number 1.0)]))
+A 2
+B "three"
 ```
